@@ -1,0 +1,145 @@
+/* Reset de estilos por defecto */
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+}
+
+/* Eliminar los estilos oscuros por defecto */
+:root {
+  color-scheme: light;
+  color: #000;
+  background-color: #fff;
+}
+
+/* Ajustes específicos para AdminLTE */
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  flex: 1;
+  background-color: #f4f6f9;
+  margin-left: 250px; /* Ancho del sidebar */
+}
+
+/* Ajuste para el contenido principal */
+.content {
+  padding: 15px;
+  margin-top: 15px; /* Reducido de 57px a 15px */
+}
+
+.content-header {
+  padding: 8px 0.5rem; /* Reducido de 15px a 8px */
+  margin-top: 45px; /* Reducido de 57px a 45px */
+  margin-bottom: 0; /* Asegurarse que no haya margen inferior */
+}
+
+/* Ajustes para las cards */
+.card {
+  margin-bottom: 1rem;
+  box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Ajustes para las small-boxes */
+.small-box {
+  margin-bottom: 0.5rem;
+}
+
+.small-box .inner {
+  padding: 10px;
+}
+
+/* Ajustes para las tablas */
+.table td, .table th {
+  padding: 0.5rem;
+}
+
+/* Ajustes para el sidebar */
+.main-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+
+.main-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 250px; /* Ancho del sidebar */
+  z-index: 1000;
+}
+
+.navbar {
+  min-height: 45px;
+  padding: 0 0.5rem;
+}
+
+/* Ajustes para el modo colapsado del sidebar */
+.sidebar-collapse .content-wrapper,
+.sidebar-collapse .main-header {
+  margin-left: 4.6rem;
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 991.98px) {
+  .content-wrapper,
+  .main-header {
+    margin-left: 0;
+  }
+
+  .sidebar-open .content-wrapper,
+  .sidebar-open .main-header {
+    margin-left: 250px;
+  }
+}
+
+/* Ajustes adicionales de espaciado */
+.row {
+  margin-right: -5px;
+  margin-left: -5px;
+}
+
+.col-lg-3, .col-lg-6, .col-6 {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+/* Ajustes para el breadcrumb */
+.breadcrumb {
+  padding: 0.5rem 0;
+  margin-bottom: 0;
+}
+
+/* Ajustes para el contenedor principal */
+.container-fluid {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+/* Ajustes para el título principal */
+.content-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.content-header .container-fluid {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.content-header .row {
+  margin-bottom: 0 !important; /* Eliminar el margen inferior del row */
+}
+
+/* Ajustes para el user-panel en el sidebar */
+.user-panel {
+  min-height: 40px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
