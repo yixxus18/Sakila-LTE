@@ -7,7 +7,7 @@ const InventoryTable = () => {
 
   const columns = [
     { header: 'ID', accessor: 'inventory_id' },
-    { header: 'Película', accessor: 'film_title' },
+    { header: 'Película', accessor: 'film.title' },
     { 
       header: 'Tienda',
       accessor: 'store_id',
@@ -31,6 +31,9 @@ const InventoryTable = () => {
         data={data} 
         isLoading={isLoading} 
         error={error}
+        allowCreate={false}
+        allowEdit={false}
+        allowDelete={false}
       />
     </div>
   );

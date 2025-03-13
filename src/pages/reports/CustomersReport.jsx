@@ -40,8 +40,7 @@ const CustomersReport = () => {
       render: (item) => `${item.first_name} ${item.last_name}`
     },
     { header: 'Email', accessor: 'email' },
-    { header: 'Ciudad', accessor: 'city' },
-    { header: 'País', accessor: 'country' },
+    { header: 'Direccion', accessor: 'address' },
     { header: 'Total Alquileres', accessor: 'rental_count' },
     { 
       header: 'Total Pagado',
@@ -63,12 +62,6 @@ const CustomersReport = () => {
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">Reporte de Clientes</h3>
-        <div className="card-tools">
-          <button type="button" className="btn btn-success btn-sm">
-            <i className="fas fa-download mr-2"></i>
-            Exportar Excel
-          </button>
-        </div>
       </div>
       <div className="card-body">
         <div className="row mb-4">
@@ -106,6 +99,9 @@ const CustomersReport = () => {
           data={customersReport} 
           isLoading={!customers || !rentals || !payments}
           error={null}
+          allowCreate={false}
+          allowDelete={false}
+          allowEdit={false}
         />
       </div>
     </div>

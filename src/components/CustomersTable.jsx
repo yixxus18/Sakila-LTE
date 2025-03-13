@@ -8,6 +8,12 @@ const CustomersTable = () => {
   const { data: customers, isLoading: customersLoading, error: customersError, refetch } = useFetch(sakilaConfig.customers.getAll);
   const { data: addresses, isLoading: addressesLoading, error: addressesError } = useFetch(sakilaConfig.addresses.getAll);
 
+  // Ordenar clientes por ID de forma ascendente
+  const sortedCustomers = useMemo(() => {
+    if (!customers) return [];
+    return [...customers].sort((a, b) => a.customer_id - b.customer_id);
+  }, [customers]);
+
   const handleCreate = async (newData) => {
     try {
       if (!newData.address_id) {
@@ -121,7 +127,7 @@ const CustomersTable = () => {
     <div className="card-body">
       <DataTable 
         columns={columns} 
-        data={customers} 
+        data={sortedCustomers} 
         isLoading={customersLoading || addressesLoading}
         error={customersError || addressesError}
         resource="Cliente"
@@ -129,7 +135,6 @@ const CustomersTable = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         idKey="customer_id"
-        allowDelete={false}
       />
     </div>
   );

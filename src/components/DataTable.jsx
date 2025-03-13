@@ -23,12 +23,36 @@ const DataTable = ({
   const [editingItemIndex, setEditingItemIndex] = useState(null);
   const pageSize = 10;
 
-  // Función helper para valores anidados
+  // Función helper para valores anidados y formateo
   const getNestedValue = (obj, path) => {
     if (!path) return "";
-    return path
+    const value = path
       .split(".")
       .reduce((acc, part) => (acc && acc[part] ? acc[part] : ""), obj);
+    
+    // Si es una fecha, la formateamos
+    if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)))) {
+      return new Date(value).toLocaleDateString();
+    }
+    // Si es un número, lo convertimos a string
+    if (typeof value === 'number') {
+      return value.toString();
+    }
+    // Si es un booleano o estado, lo procesamos
+    if (typeof value === 'boolean') {
+      return value ? 'Activo' : 'Inactivo';
+    }
+    return value || "";
+  };
+
+  // Función para obtener el valor de búsqueda de una columna
+  const getSearchValue = (item, col) => {
+    if (col.render) {
+      // Si tiene función render, la usamos para obtener el valor formateado
+      const renderedValue = col.render(item);
+      return typeof renderedValue === 'string' ? renderedValue : String(renderedValue || '');
+    }
+    return getNestedValue(item, col.accessor);
   };
 
   // Columnas buscables
@@ -41,21 +65,25 @@ const DataTable = ({
     [columns]
   );
 
-  // Datos filtrados
+  // Datos filtrados con búsqueda mejorada
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
     const lowerQuery = searchQuery.toLowerCase();
     return data.filter((item) =>
       searchableColumns.some((accessor) => {
-        const value = getNestedValue(item, accessor);
-        return String(value || "")
-          .toLowerCase()
-          .includes(lowerQuery);
+        const column = columns.find(col => col.accessor === accessor);
+        if (!column) return false;
+        
+        const searchValue = getSearchValue(item, column);
+        const stringValue = String(searchValue || "").toLowerCase();
+        
+        // Búsqueda por coincidencia parcial
+        return stringValue.includes(lowerQuery);
       })
     );
-  }, [data, searchQuery, searchableColumns]);
+  }, [data, searchQuery, searchableColumns, columns]);
 
-  // Paginación
+  // Paginación mejorada
   const totalPages = useMemo(
     () => Math.ceil(filteredData.length / pageSize),
     [filteredData.length]
@@ -66,6 +94,112 @@ const DataTable = ({
       filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [filteredData, currentPage]
   );
+
+  // Función para cambiar página
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Renderizado de controles de paginación
+  const renderPagination = () => {
+    const maxButtons = 5;
+    const pageButtons = [];
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+    if (endPage - startPage + 1 < maxButtons) {
+      startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+
+    // Botón primera página
+    if (startPage > 1) {
+      pageButtons.push(
+        <button
+          key="first"
+          className="btn btn-outline-primary btn-sm"
+          onClick={() => handlePageChange(1)}
+        >
+          1
+        </button>
+      );
+      if (startPage > 2) {
+        pageButtons.push(<span key="ellipsis1">...</span>);
+      }
+    }
+
+    // Botones de página
+    for (let i = startPage; i <= endPage; i++) {
+      pageButtons.push(
+        <button
+          key={i}
+          className={`btn btn-${currentPage === i ? 'primary' : 'outline-primary'} btn-sm`}
+          onClick={() => handlePageChange(i)}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    // Botón última página
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pageButtons.push(<span key="ellipsis2">...</span>);
+      }
+      pageButtons.push(
+        <button
+          key="last"
+          className="btn btn-outline-primary btn-sm"
+          onClick={() => handlePageChange(totalPages)}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    return (
+      <div className="d-flex gap-2 align-items-center">
+        <button
+          className="btn btn-outline-primary btn-sm"
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          <i className="fas fa-chevron-left"></i>
+        </button>
+        
+        {totalPages > 10 && (
+          <button
+            className="btn btn-outline-primary btn-sm"
+            disabled={currentPage <= 10}
+            onClick={() => handlePageChange(Math.max(1, currentPage - 10))}
+          >
+            -10
+          </button>
+        )}
+        
+        {pageButtons}
+        
+        {totalPages > 10 && (
+          <button
+            className="btn btn-outline-primary btn-sm"
+            disabled={currentPage > totalPages - 10}
+            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 10))}
+          >
+            +10
+          </button>
+        )}
+        
+        <button
+          className="btn btn-outline-primary btn-sm"
+          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          <i className="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    );
+  };
 
   // Renderizado de acciones
   const renderActions = (item, index) => (
@@ -106,47 +240,104 @@ const DataTable = ({
   );
 
   // Renderizado del modal
-  const renderModal = () => (
-    <div className="modal-wrapper">
-      <div
-        className={`modal fade ${showModal ? "show" : ""}`}
-        style={{ display: showModal ? "block" : "none" }}
-        tabIndex="-1"
-        role="dialog"
-        aria-modal="true"
+  const renderModal = () => {
+    if (!showModal) return null;
+    
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 9999
+        }} 
+        onClick={() => {
+          setShowModal(false);
+          setFormData({});
+          setEditingId(null);
+          setEditingItemIndex(null);
+        }}
       >
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">
-                <i
-                  className={`fas ${
-                    editingId ? "fa-edit" : "fa-plus-circle"
-                  } me-2`}
-                ></i>
-                {editingId ? "Editar" : "Crear"} {resource}
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => {
-                  setShowModal(false);
-                  setFormData({});
-                  setEditingId(null);
-                  setEditingItemIndex(null);
-                }}
-                aria-label="Close"
-              ></button>
-            </div>
+        <div 
+          style={{
+            position: 'absolute',
+            width: '800px',
+            height: '600px',
+            top: '50%',
+            left: '50%',
+            marginTop: '-300px',
+            marginLeft: '-400px',
+            backgroundColor: '#fff',
+            boxShadow: '0 5px 15px rgba(0,0,0,0.5)',
+            zIndex: 10000
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div 
+            style={{
+              background: '#007bff',
+              color: '#fff',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 15px',
+              borderBottom: '1px solid #0069d9'
+            }}
+          >
+            <h5 style={{
+              margin: 0,
+              padding: 0,
+              fontSize: '18px',
+              fontWeight: 500,
+              color: '#fff'
+            }}>
+              <i className={`fas ${editingId ? "fa-edit" : "fa-plus-circle"} me-2`}></i>
+              {editingId ? "Editar" : "Crear"} {resource}
+            </h5>
+            <button 
+              onClick={() => {
+                setShowModal(false);
+                setFormData({});
+                setEditingId(null);
+                setEditingItemIndex(null);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '20px',
+                cursor: 'pointer'
+              }}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
 
-            <div className="modal-body">
+          <div 
+            style={{
+              padding: '20px',
+              backgroundColor: '#f4f6f9',
+              overflowY: 'auto',
+              height: '523px'
+            }}
+          >
+            <div style={{
+              backgroundColor: '#fff',
+              border: '1px solid #dee2e6',
+              borderRadius: '0',
+              boxShadow: 'none',
+              padding: '15px'
+            }}>
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
+                  console.log('Formulario enviado');
                   try {
                     const formattedData = {};
 
-                    // Convertir tipos de datos
                     columns
                       .filter((col) => !col.noForm)
                       .forEach((col) => {
@@ -164,23 +355,38 @@ const DataTable = ({
                         }
                       });
 
+                    console.log('Datos formateados:', formattedData);
+
+                    let result;
                     if (editingId) {
-                      await onEdit(editingId, formattedData);
+                      console.log('Editando registro con ID:', editingId);
+                      result = await onEdit(editingId, formattedData);
                       const itemPage =
                         Math.floor(editingItemIndex / pageSize) + 1;
                       setCurrentPage(itemPage);
                     } else {
-                      await onCreate(formattedData);
+                      console.log('Creando nuevo registro');
+                      result = await onCreate(formattedData);
                       const lastPage = Math.ceil((data.length + 1) / pageSize);
                       setCurrentPage(lastPage);
                     }
 
+                    console.log('Operación completada exitosamente:', result);
                     setShowModal(false);
                     setFormData({});
                     setEditingId(null);
                     setEditingItemIndex(null);
                   } catch (error) {
                     console.error("Error:", error);
+                    // Mostrar mensaje más amigable con los detalles del error
+                    const errorMessage = error.message || "Ocurrió un error inesperado";
+                    const friendlyMessage = 
+                      errorMessage.includes("NetworkError") ? "Error de conexión: Verifica tu conexión a internet" :
+                      errorMessage.includes("Duplicate") ? "Ya existe un registro con esos datos" :
+                      errorMessage.includes("required") ? "Por favor complete todos los campos requeridos" :
+                      errorMessage;
+                    
+                    alert(`Error al procesar la operación: ${friendlyMessage}`);
                   }
                 }}
               >
@@ -189,50 +395,73 @@ const DataTable = ({
                     .filter((col) => !col.noForm)
                     .map((col) => (
                       <div className="col-md-6 mb-3" key={col.accessor}>
-                        <div className="form-group">
-                          <label className="form-label fw-bold">
+                        <div style={{
+                          marginBottom: '12px'
+                        }}>
+                          <label style={{
+                            display: 'block',
+                            marginBottom: '5px',
+                            fontWeight: 500
+                          }}>
                             {col.header}
                             {col.required && (
-                              <span className="text-danger">*</span>
+                              <span style={{color: 'red'}}>*</span>
                             )}
                           </label>
 
                           {col.type === "select" ? (
-                            <select
-                              className="form-select"
+                          <select
                               value={formData[col.accessor] || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  [col.accessor]: e.target.value,
-                                })
-                              }
-                              required={col.required}
-                            >
-                              <option value="">Seleccionar...</option>
-                              {col.options?.map((option, index) => {
-                                const label = col.optionLabel
-                                  ? typeof col.optionLabel === "function"
-                                    ? col.optionLabel(option)
-                                    : option[col.optionLabel]
-                                  : option;
-                                const value = col.optionValue
-                                  ? option[col.optionValue]
-                                  : option;
+                              onChange={(e) => {
+                                if (col.onChange) {
+                                  col.onChange(e.target.value, formData, setFormData);
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    [col.accessor]: e.target.value,
+                                  });
+                                }
+                              }}
+                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                              disabled={col.disabled ? col.disabled(formData) : false}
+                              style={{
+                                width: '100%', 
+                                padding: '8px 12px', 
+                                border: '1px solid #ced4da', 
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                lineHeight: '1.5'
+                              }}
+                          >
+                            <option value="">Seleccionar...</option>
+                              {(() => {
+                                const options = typeof col.options === 'function' 
+                                  ? col.options(formData) 
+                                  : col.options || [];
+                                
+                                return options.map((option) => {
+                                  const label = col.optionLabel
+                                    ? typeof col.optionLabel === "function"
+                                      ? col.optionLabel(option)
+                                      : option[col.optionLabel]
+                                    : option;
+                                  const value = col.optionValue
+                                    ? option[col.optionValue]
+                                    : option;
 
-                                return (
-                                  <option
-                                    key={`${col.accessor}-${index}`} // ← Clave única
-                                    value={value}
-                                  >
-                                    {label || "N/A"}
-                                  </option>
-                                );
-                              })}
-                            </select>
+                                  return (
+                                    <option
+                                      key={`${col.accessor}-${value}`}
+                                      value={value}
+                                    >
+                                      {label || "N/A"}
+                                    </option>
+                                  );
+                                });
+                              })()}
+                          </select>
                           ) : col.type === "textarea" ? (
-                            <textarea
-                              className="form-control"
+                          <textarea
                               rows="3"
                               value={formData[col.accessor] || ""}
                               onChange={(e) =>
@@ -241,11 +470,20 @@ const DataTable = ({
                                   [col.accessor]: e.target.value,
                                 })
                               }
+                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                              style={{
+                                width: '100%', 
+                                padding: '8px 12px', 
+                                border: '1px solid #ced4da', 
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                lineHeight: '1.5',
+                                minHeight: '80px'
+                              }}
                             />
                           ) : (
-                            <input
+                          <input
                               type={col.type || "text"}
-                              className="form-control"
                               value={formData[col.accessor] || ""}
                               onChange={(e) =>
                                 setFormData({
@@ -254,28 +492,63 @@ const DataTable = ({
                                 })
                               }
                               placeholder={`Ingrese ${col.header.toLowerCase()}`}
-                              required={col.required}
+                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                              minLength={col.minLength}
+                              maxLength={col.maxLength}
                               step={col.type === "number" ? "0.01" : undefined}
+                              style={{
+                                width: '100%', 
+                                padding: '8px 12px', 
+                                border: '1px solid #ced4da', 
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                lineHeight: '1.5'
+                              }}
                             />
                           )}
                         </div>
                       </div>
                     ))}
                 </div>
-                <div className="modal-footer">
+                
+                <div style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  justifyContent: 'flex-end'
+                }}>
                   <button
                     type="button"
-                    className="btn btn-secondary"
                     onClick={() => {
                       setShowModal(false);
                       setFormData({});
                       setEditingId(null);
                       setEditingItemIndex(null);
                     }}
+                    style={{
+                      backgroundColor: '#6c757d',
+                      border: 'none',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      marginRight: '10px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
                   >
                     <i className="fas fa-times me-2"></i>Cancelar
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: '#007bff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
                     <i
                       className={`fas ${
                         editingId ? "fa-save" : "fa-check"
@@ -289,156 +562,127 @@ const DataTable = ({
           </div>
         </div>
       </div>
-      {showModal && (
-        <div
-          className="modal-backdrop fade show"
-          onClick={() => {
-            setShowModal(false);
-            setFormData({});
-            setEditingId(null);
-            setEditingItemIndex(null);
-          }}
-        />
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <div className="d-flex justify-content-between mb-3 align-items-center">
-          <div className="d-flex gap-2">
-            {allowCreate && (
-              <button
-                className="btn btn-success btn-sm"
-                onClick={() => {
-                  setEditingId(null);
-                  setFormData({});
-                  setShowModal(true);
-                }}
-              >
-                <i className="fas fa-plus me-2"></i>
-                Crear {resource}
-              </button>
-            )}
-          </div>
-          <div style={{ width: "300px" }}>
-            {searchableColumns.length > 0 && (
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="fas fa-search"></i>
-                </span>
-                <input
-                  type="search"
-                  className="form-control form-control-sm"
-                  placeholder="Buscar..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="table-responsive">
-          <table className="table table-bordered table-hover table-striped">
-            <thead className="thead-dark">
-              <tr>
-                {columns.map((col) => (
-                  <th key={col.accessor} className="align-middle">
-                    {col.header}
-                  </th>
-                ))}
-                {(allowEdit || allowDelete) && (
-                  <th className="align-middle">Acciones</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={columns.length + 1} className="text-center">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Cargando...</span>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {error && (
-                <tr>
-                  <td colSpan={columns.length + 1} className="text-center">
-                    <div className="alert alert-danger m-0">{error}</div>
-                  </td>
-                </tr>
-              )}
-              {!isLoading && !error && paginatedData.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length + 1} className="text-center">
-                    {data.length === 0 ? (
-                      <div className="alert alert-info m-0">
-                        No hay datos disponibles
-                      </div>
-                    ) : (
-                      <div className="alert alert-warning m-0">
-                        No se encontraron resultados
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((item, index) => (
-                  <tr key={index}>
-                    {columns.map((col) => (
-                      <td key={col.accessor}>
-                        {col.render
-                          ? col.render(item)
-                          : getNestedValue(item, col.accessor)}
-                      </td>
-                    ))}
-                    {(allowEdit || allowDelete) && (
-                      <td>{renderActions(item, index)}</td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <div>
-              Mostrando {paginatedData.length} de {filteredData.length}{" "}
-              registros
-            </div>
+    <>
+      <div className="card">
+        <div className="card-body">
+          <div className="d-flex justify-content-between mb-3 align-items-center">
             <div className="d-flex gap-2">
-              <button
-                className="btn btn-outline-primary btn-sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                <i className="fas fa-chevron-left me-2"></i>Anterior
-              </button>
-              <span className="px-3">
-                Página {currentPage} de {totalPages}
-              </span>
-              <button
-                className="btn btn-outline-primary btn-sm"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                Siguiente<i className="fas fa-chevron-right ms-2"></i>
-              </button>
+              {allowCreate && (
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={() => {
+                    setEditingId(null);
+                    setFormData({});
+                    setShowModal(true);
+                  }}
+                >
+                  <i className="fas fa-plus me-2"></i>
+                  Crear {resource}
+                </button>
+              )}
+            </div>
+            <div style={{ width: "300px" }}>
+              {searchableColumns.length > 0 && (
+                <div className="input-group">
+                  <span className="input-group-text">
+                    <i className="fas fa-search"></i>
+                  </span>
+                  <input
+                    type="search"
+                    className="form-control form-control-sm"
+                    placeholder="Buscar..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {showModal && renderModal()}
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover table-striped">
+              <thead className="thead-dark">
+                <tr>
+                  {columns.map((col) => (
+                    <th key={col.accessor} className="align-middle">
+                      {col.header}
+                    </th>
+                  ))}
+                  {(allowEdit || allowDelete) && (
+                    <th className="align-middle">Acciones</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading && (
+                  <tr>
+                    <td colSpan={columns.length + 1} className="text-center">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Cargando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {error && (
+                  <tr>
+                    <td colSpan={columns.length + 1} className="text-center">
+                      <div className="alert alert-danger m-0">{error}</div>
+                    </td>
+                  </tr>
+                )}
+                {!isLoading && !error && paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length + 1} className="text-center">
+                      {data.length === 0 ? (
+                        <div className="alert alert-info m-0">
+                          No hay datos disponibles
+                        </div>
+                      ) : (
+                        <div className="alert alert-warning m-0">
+                          No se encontraron resultados
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((item, index) => (
+                    <tr key={index}>
+                      {columns.map((col) => (
+                        <td key={col.accessor}>
+                          {col.render
+                            ? col.render(item)
+                            : getNestedValue(item, col.accessor)}
+                        </td>
+                      ))}
+                      {(allowEdit || allowDelete) && (
+                        <td>{renderActions(item, index)}</td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredData.length > 0 && (
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                Mostrando {paginatedData.length} de {filteredData.length} registros
+              </div>
+              {renderPagination()}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      {showModal && renderModal()}
+    </>
   );
 };
 
@@ -451,7 +695,14 @@ DataTable.propTypes = {
       searchable: PropTypes.bool,
       noForm: PropTypes.bool,
       type: PropTypes.string,
-      required: PropTypes.bool,
+      required: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+      minLength: PropTypes.number,
+      maxLength: PropTypes.number,
+      options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]),
+      optionLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+      optionValue: PropTypes.string,
+      onChange: PropTypes.func,
+      disabled: PropTypes.func
     })
   ).isRequired,
   data: PropTypes.array,

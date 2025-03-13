@@ -11,12 +11,19 @@ const Navbar = ({ setIsSidebarOpen }) => {
             className="nav-link" 
             onClick={() => setIsSidebarOpen(prev => !prev)}
             style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+            aria-label="Toggle Sidebar"
           >
             <i className="fas fa-bars"></i>
           </button>
         </li>
         <li className="nav-item d-none d-sm-inline-block">
-          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/" className="nav-link">Inicio</Link>
+        </li>
+        <li className="nav-item d-none d-sm-inline-block">
+          <Link to="/films" className="nav-link">Películas</Link>
+        </li>
+        <li className="nav-item d-none d-sm-inline-block">
+          <Link to="/customers" className="nav-link">Clientes</Link>
         </li>
       </ul>
 
@@ -26,8 +33,8 @@ const Navbar = ({ setIsSidebarOpen }) => {
           <input 
             className="form-control form-control-navbar" 
             type="search" 
-            placeholder="Buscar Peliculas" 
-            aria-label="Search" 
+            placeholder="Buscar Películas" 
+            aria-label="Buscar" 
           />
           <div className="input-group-append">
             <button className="btn btn-navbar" type="submit">
@@ -39,56 +46,21 @@ const Navbar = ({ setIsSidebarOpen }) => {
 
       {/* Right navbar links */}
       <ul className="navbar-nav ml-auto">
-        {/* Messages Dropdown Menu */}
+        {/* User dropdown */}
         <li className="nav-item dropdown">
-          <a className="nav-link" data-toggle="dropdown" href="#">
-            <i className="far fa-comments"></i>
-            <span className="badge badge-danger navbar-badge">3</span>
+          <a className="nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <i className="fas fa-user-circle"></i>
           </a>
-          <div className="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-            <a href="#" className="dropdown-item">
-              <div className="media">
-                <img src="/dist/img/user1-128x128.jpg" alt="User Avatar" className="img-size-50 mr-3 img-circle" />
-                <div className="media-body">
-                  <h3 className="dropdown-item-title">
-                    Brad Diesel
-                    <span className="float-right text-sm text-danger"><i className="fas fa-star"></i></span>
-                  </h3>
-                  <p className="text-sm">Call me whenever you can...</p>
-                  <p className="text-sm text-muted"><i className="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                </div>
-              </div>
-            </a>
+          <div className="dropdown-menu dropdown-menu-right">
+            <span className="dropdown-item dropdown-header">Administrador</span>
             <div className="dropdown-divider"></div>
-            <a href="#" className="dropdown-item dropdown-footer">See All Messages</a>
-          </div>
-        </li>
-
-        {/* Notifications Dropdown Menu */}
-        <li className="nav-item dropdown">
-          <a className="nav-link" data-toggle="dropdown" href="#">
-            <i className="far fa-bell"></i>
-            <span className="badge badge-warning navbar-badge">15</span>
-          </a>
-          <div className="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-            <span className="dropdown-item dropdown-header">15 Notifications</span>
+            <Link to="/staff" className="dropdown-item">
+              <i className="fas fa-users-cog mr-2"></i> Personal
+            </Link>
             <div className="dropdown-divider"></div>
             <a href="#" className="dropdown-item">
-              <i className="fas fa-envelope mr-2"></i> 4 new messages
-              <span className="float-right text-muted text-sm">3 mins</span>
+              <i className="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
             </a>
-            <div className="dropdown-divider"></div>
-            <a href="#" className="dropdown-item">
-              <i className="fas fa-users mr-2"></i> 8 friend requests
-              <span className="float-right text-muted text-sm">12 hours</span>
-            </a>
-            <div className="dropdown-divider"></div>
-            <a href="#" className="dropdown-item">
-              <i className="fas fa-file mr-2"></i> 3 new reports
-              <span className="float-right text-muted text-sm">2 days</span>
-            </a>
-            <div className="dropdown-divider"></div>
-            <a href="#" className="dropdown-item dropdown-footer">See All Notifications</a>
           </div>
         </li>
       </ul>

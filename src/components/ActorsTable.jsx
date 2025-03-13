@@ -95,7 +95,7 @@ const ActorsTable = () => {
       onCreate={handleCreate}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      idKey="actor_id" // <- Agregar esta prop
+      idKey="actor_id" 
     />
   );
 };

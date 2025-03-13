@@ -1,10 +1,23 @@
-
 const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.text();
     throw new Error(error || `HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  // Verificar si es una respuesta 204 No Content
+  if (response.status === 204) {
+    return { success: true }; // Devolver un objeto simple para mantener consistencia
+  }
+  
+  // Verificar si hay contenido antes de intentar parsear JSON
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  
+  // Si no hay JSON, devolver el texto o un objeto de éxito
+  const text = await response.text();
+  return text ? JSON.parse(text) : { success: true };
 };
 
 export const fetchData = async (url, options = {}) => {

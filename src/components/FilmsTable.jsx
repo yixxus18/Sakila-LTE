@@ -1,6 +1,6 @@
 import DataTable from './DataTable';
 import useFetch from '../hooks/useFetch';
-import { postData, putData } from '../utils/fetchData';
+import { postData, putData, deleteData } from '../utils/fetchData';
 import sakilaConfig from '../configs/sakilaConfig';
 import { useMemo } from 'react';
 
@@ -8,22 +8,31 @@ const FilmsTable = () => {
   const { data: films, isLoading, error, refetch } = useFetch(sakilaConfig.films.getAll);
   const { data: languages } = useFetch(sakilaConfig.languages.getAll); 
 
+  const formattedFilms = useMemo(() => {
+    return (films?.map(film => ({
+      ...film,
+      language: languages?.find(lang => lang.language_id === film.language_id)
+    })) || []).sort((a, b) => a.film_id - b.film_id);
+  }, [films, languages]);
+
   const handleCreate = async (newData) => {
     try {
       console.log('Enviando datos de nueva película:', newData); 
       await postData(sakilaConfig.films.create, {
-        ...newData,
-        language_id: parseInt(newData.language_id),
+        title: newData.title,
         release_year: parseInt(newData.release_year),
+        language_id: parseInt(newData.language_id),
+        rental_duration: 3,
+        rental_rate: parseFloat(newData.rental_rate),
         length: parseInt(newData.length),
-        rental_rate: parseFloat(newData.rental_rate)
+        replacement_cost: 19.99,
+        rating: newData.rating || 'G'
       });
       refetch();
     } catch (error) {
       console.error('Error al crear película:', error);
     }
   };
-
 
   const handleEdit = async (id, updatedFilm) => {
     try {
@@ -43,12 +52,18 @@ const FilmsTable = () => {
     }
   };
 
-  const formattedFilms = useMemo(() => {
-    return films?.map(film => ({
-      ...film,
-      language: languages?.find(lang => lang.language_id === film.language_id)
-    })) || [];
-  }, [films, languages]);
+  const handleDelete = async (id) => {
+    try {
+      if (window.confirm(`¿Está seguro que desea eliminar esta película? Esta acción no se puede deshacer.`)) {
+        console.log('Eliminando película ID:', id);
+        await deleteData(sakilaConfig.films.delete(id));
+        await refetch();
+      }
+    } catch (error) {
+      console.error('Error al eliminar película:', error);
+      alert('No se pudo eliminar la película. Puede que esté siendo utilizada en alquileres o inventarios.');
+    }
+  };
 
   const columns = [
     { 
@@ -79,7 +94,7 @@ const FilmsTable = () => {
       header: 'Duración',
       accessor: 'length',
       type: 'number',
-      required: false
+      required: true
     },
     { 
       header: 'Idioma',
@@ -88,7 +103,8 @@ const FilmsTable = () => {
       options: languages || [],
       optionLabel: 'name',
       optionValue: 'language_id',
-      render: (item) => item.language?.name || 'N/A'
+      render: (item) => item.language?.name || 'N/A',
+      required: true
     },
     { 
       header: 'Clasificación',
@@ -101,6 +117,7 @@ const FilmsTable = () => {
       header: 'Precio de Renta',
       accessor: 'rental_rate',
       type: 'number',
+      required: true,
       render: (item) => `$${item.rental_rate}`
     },
     { 
@@ -108,7 +125,7 @@ const FilmsTable = () => {
       accessor: 'categories',
       render: (item) => (
         <div className="badge bg-secondary">
-          {item.categories.map(cat => cat.name).join(', ') || 'N/A'}
+          {item.categories?.map(cat => cat.name).join(', ') || 'N/A'}
         </div>
       ),
       noForm: true
@@ -125,7 +142,8 @@ const FilmsTable = () => {
         resource="Película"
         onCreate={handleCreate}
         onEdit={handleEdit}
-        allowDelete={false}
+        onDelete={handleDelete}
+        allowDelete={true}
         idKey="film_id"
       />
     </div>

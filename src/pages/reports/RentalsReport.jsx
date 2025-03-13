@@ -25,14 +25,16 @@ const RentalsReport = () => {
     },
     { 
       header: 'Cliente',
-      render: (item) => `${item.customer_first_name} ${item.customer_last_name}`
+      accessor: 'customer_name'
     },
     { header: 'Película', accessor: 'film_title' },
     { 
       header: 'Estado',
       render: (item) => {
         if (!item.return_date) {
-          const isOverdue = new Date(item.rental_date) < new Date();
+          const rentalDate = new Date(item.rental_date);
+          // Consideramos que está vencido si han pasado más de 3 días
+          const isOverdue = (new Date() - rentalDate) > (3 * 24 * 60 * 60 * 1000);
           return isOverdue ? 'Vencido' : 'Activo';
         }
         return 'Devuelto';
@@ -58,8 +60,10 @@ const RentalsReport = () => {
 
   const filteredData = data?.filter(item => {
     if (filters.status) {
+      const rentalDate = new Date(item.rental_date);
+      const isOverdue = !item.return_date && (new Date() - rentalDate) > (3 * 24 * 60 * 60 * 1000);
       const status = !item.return_date 
-        ? (new Date(item.rental_date) < new Date() ? 'overdue' : 'active')
+        ? (isOverdue ? 'overdue' : 'active')
         : 'returned';
       if (status !== filters.status) return false;
     }
@@ -69,19 +73,28 @@ const RentalsReport = () => {
   });
 
   const totalRentals = filteredData?.length || 0;
-  const activeRentals = filteredData?.filter(item => !item.return_date)?.length || 0;
-  const overdueRentals = filteredData?.filter(item => !item.return_date && new Date(item.rental_date) < new Date())?.length || 0;
+  const activeRentals = filteredData?.filter(item => {
+    if (!item.return_date) {
+      const rentalDate = new Date(item.rental_date);
+      // Un alquiler está activo si no tiene fecha de devolución y no han pasado más de 3 días
+      return (new Date() - rentalDate) <= (3 * 24 * 60 * 60 * 1000);
+    }
+    return false;
+  })?.length || 0;
+  
+  const overdueRentals = filteredData?.filter(item => {
+    if (!item.return_date) {
+      const rentalDate = new Date(item.rental_date);
+      // Un alquiler está vencido si no tiene fecha de devolución y han pasado más de 3 días
+      return (new Date() - rentalDate) > (3 * 24 * 60 * 60 * 1000);
+    }
+    return false;
+  })?.length || 0;
 
   return (
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">Reporte de Alquileres</h3>
-        <div className="card-tools">
-          <button type="button" className="btn btn-success btn-sm">
-            <i className="fas fa-download mr-2"></i>
-            Exportar Excel
-          </button>
-        </div>
       </div>
       <div className="card-body">
         <div className="row mb-4">
@@ -162,6 +175,9 @@ const RentalsReport = () => {
           data={filteredData || []} 
           isLoading={isLoading} 
           error={error}
+          allowCreate={false}
+          allowDelete={false}
+          allowEdit={false}
         />
       </div>
     </div>

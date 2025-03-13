@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import PropTypes from 'prop-types';
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
@@ -62,6 +63,10 @@ const Layout = ({ children }) => {
       </aside>
     </div>
   );
+};
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired
 };
 
 export default Layout; 
