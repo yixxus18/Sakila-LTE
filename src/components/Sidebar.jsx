@@ -34,7 +34,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       <aside className={`main-sidebar sidebar-dark-primary elevation-4 ${isSidebarOpen ? 'sidebar-open' : ''}`}>
         <Link to="/" className="brand-link" onClick={closeSidebar}>
           <img
-            src="/dist/img/images.png"
+            src="/assets/img/images.png"
             alt="AdminLTE Logo"
             className="brand-image img-circle elevation-3"
             style={{ opacity: '.8' }}
@@ -45,7 +45,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         <div className="sidebar">
           <div className="user-panel mt-3 pb-3 mb-3 d-flex">
             <div className="image">
-              <img src="/dist/img/user2-160x160.jpg" className="img-circle elevation-2" alt="User Image" />
+              <img 
+                src="/assets/img/user2-160x160.jpg"
+                className="img-circle elevation-2" 
+                alt="User Image" 
+              />
             </div>
             <div className="info">
               <Link to="#" className="d-block">Administrador</Link>
