@@ -8,13 +8,14 @@ const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
 
   useEffect(() => {
-    document.body.className = '';
-    document.body.classList.add(
-      'hold-transition',
-      'sidebar-mini',
-      'layout-fixed',
-      'layout-navbar-fixed'
+    const baseClasses = ['sidebar-mini', 'layout-fixed', 'layout-navbar-fixed'];
+    
+    // Agregar clases base sin eliminar otras clases (como modal-open)
+    const currentClasses = document.body.className.split(' ').filter(cls => 
+      !['sidebar-collapse', 'sidebar-open', 'sidebar-mini', 'layout-fixed', 'layout-navbar-fixed'].includes(cls)
     );
+    
+    document.body.className = [...currentClasses, ...baseClasses].join(' ');
 
     const handleResize = () => {
       if (window.innerWidth <= 768) {
@@ -25,7 +26,8 @@ const Layout = ({ children }) => {
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
-      document.body.className = '';
+      // No limpiar todas las clases al desmontar
+      baseClasses.forEach(cls => document.body.classList.remove(cls));
     };
   }, []);
 

@@ -691,4 +691,181 @@ html body .wrapper .main-sidebar.sidebar-collapse:hover .user-panel .image img {
   border-radius: 50% !important;
   transform: none !important;
   transition: none !important;
+}
+
+/* Reset para el modal */
+#modal-container-fixed {
+  all: initial !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  z-index: 999999999 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding-top: 2rem !important;
+  overflow-y: auto !important;
+  font-family: inherit !important;
+}
+
+#modal-dialog-fixed {
+  all: initial !important;
+  position: relative !important;
+  width: 90% !important;
+  max-width: 600px !important;
+  margin: 0 auto 2rem auto !important;
+  background: white !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  font-family: inherit !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+#modal-header-fixed {
+  all: initial !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1rem !important;
+  background: #007bff !important;
+  color: white !important;
+  border-radius: 8px 8px 0 0 !important;
+  font-family: inherit !important;
+}
+
+#modal-header-fixed h5 {
+  all: initial !important;
+  color: white !important;
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+#modal-header-fixed button {
+  all: initial !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  font-size: 1.5rem !important;
+  padding: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: inherit !important;
+}
+
+#modal-body-fixed {
+  all: initial !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+  background: white !important;
+  font-family: inherit !important;
+  display: block !important;
+}
+
+/* Estilos para el formulario dentro del modal */
+#modal-body-fixed form {
+  all: initial !important;
+  display: block !important;
+  font-family: inherit !important;
+}
+
+#modal-body-fixed .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  margin: -0.5rem !important;
+}
+
+#modal-body-fixed .col-md-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  padding: 0.5rem !important;
+}
+
+#modal-body-fixed label {
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+}
+
+#modal-body-fixed input,
+#modal-body-fixed select,
+#modal-body-fixed textarea {
+  display: block !important;
+  width: 100% !important;
+  padding: 0.5rem !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  background: white !important;
+  margin-bottom: 1rem !important;
+}
+
+#modal-body-fixed button {
+  cursor: pointer !important;
+  padding: 0.5rem 1rem !important;
+  border: none !important;
+  border-radius: 4px !important;
+  color: white !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-left: 0.5rem !important;
+}
+
+#modal-body-fixed button[type="button"] {
+  background: #6c757d !important;
+}
+
+#modal-body-fixed button[type="submit"] {
+  background: #007bff !important;
+}
+
+/* Eliminar las reglas que bloquean el scroll */
+body.modal-open {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
+@media (max-width: 768px) {
+  #modal-dialog-fixed {
+    width: 95% !important;
+    margin: 1rem !important;
+  }
+  
+  #modal-body-fixed .col-md-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+.col-md-6 {
+  padding: 0 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -0.75rem;
+}
+
+/* Permitir scroll en el body cuando el modal está abierto */
+body.modal-open {
+  overflow-y: auto !important;
+  padding-right: 0 !important;
 } 

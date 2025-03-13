@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 
 const DataTable = ({
@@ -17,11 +17,20 @@ const DataTable = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editingItemIndex, setEditingItemIndex] = useState(null);
   const pageSize = 10;
+
+  // Efecto para controlar el scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (showForm) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+  }, [showForm]);
 
   // Función helper para valores anidados y formateo
   const getNestedValue = (obj, path) => {
@@ -222,7 +231,7 @@ const DataTable = ({
             setEditingId(item[idKey]);
             setEditingItemIndex(index);
             setFormData(initialFormData);
-            setShowModal(true);
+            setShowForm(true);
           }}
         >
           <i className="fas fa-edit me-1"></i>Editar
@@ -239,327 +248,186 @@ const DataTable = ({
     </div>
   );
 
-  // Renderizado del modal
-  const renderModal = () => {
-    if (!showModal) return null;
+  // Renderizado del formulario
+  const renderForm = () => {
+    if (!showForm) return null;
     
     return (
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 9999
-        }} 
-        onClick={() => {
-          setShowModal(false);
-          setFormData({});
-          setEditingId(null);
-          setEditingItemIndex(null);
-        }}
-      >
-        <div 
-          style={{
-            position: 'absolute',
-            width: '800px',
-            height: '600px',
-            top: '50%',
-            left: '50%',
-            marginTop: '-300px',
-            marginLeft: '-400px',
-            backgroundColor: '#fff',
-            boxShadow: '0 5px 15px rgba(0,0,0,0.5)',
-            zIndex: 10000
-          }} 
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div 
-            style={{
-              background: '#007bff',
-              color: '#fff',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 15px',
-              borderBottom: '1px solid #0069d9'
+      <div className="card mb-3">
+        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 className="m-0">
+            <i className={`fas ${editingId ? "fa-edit" : "fa-plus-circle"} me-2`}></i>
+            {editingId ? "Editar" : "Crear"} {resource}
+          </h5>
+          <button 
+            type="button"
+            className="btn-close btn-close-white"
+            onClick={() => {
+              setShowForm(false);
+              setFormData({});
+              setEditingId(null);
+              setEditingItemIndex(null);
             }}
-          >
-            <h5 style={{
-              margin: 0,
-              padding: 0,
-              fontSize: '18px',
-              fontWeight: 500,
-              color: '#fff'
-            }}>
-              <i className={`fas ${editingId ? "fa-edit" : "fa-plus-circle"} me-2`}></i>
-              {editingId ? "Editar" : "Crear"} {resource}
-            </h5>
-            <button 
-              onClick={() => {
-                setShowModal(false);
+            aria-label="Close"
+          />
+        </div>
+        <div className="card-body">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const formattedData = {};
+                columns
+                  .filter((col) => !col.noForm)
+                  .forEach((col) => {
+                    const value = formData[col.accessor];
+                    if (col.type === "number") {
+                      formattedData[col.accessor] = value ? parseFloat(value) : null;
+                    } else if (col.type === "select" && col.optionValue) {
+                      formattedData[col.accessor] = value ? parseInt(value) : null;
+                    } else {
+                      formattedData[col.accessor] = value;
+                    }
+                  });
+
+                let result;
+                if (editingId) {
+                  result = await onEdit(editingId, formattedData);
+                  const itemPage = Math.floor(editingItemIndex / pageSize) + 1;
+                  setCurrentPage(itemPage);
+                } else {
+                  result = await onCreate(formattedData);
+                  const lastPage = Math.ceil((data.length + 1) / pageSize);
+                  setCurrentPage(lastPage);
+                }
+
+                setShowForm(false);
                 setFormData({});
                 setEditingId(null);
                 setEditingItemIndex(null);
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '20px',
-                cursor: 'pointer'
-              }}
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-
-          <div 
-            style={{
-              padding: '20px',
-              backgroundColor: '#f4f6f9',
-              overflowY: 'auto',
-              height: '523px'
+              } catch (error) {
+                console.error("Error:", error);
+                const errorMessage = error.message || "Ocurrió un error inesperado";
+                const friendlyMessage = 
+                  errorMessage.includes("NetworkError") ? "Error de conexión: Verifica tu conexión a internet" :
+                  errorMessage.includes("Duplicate") ? "Ya existe un registro con esos datos" :
+                  errorMessage.includes("required") ? "Por favor complete todos los campos requeridos" :
+                  errorMessage;
+                
+                alert(`Error al procesar la operación: ${friendlyMessage}`);
+              }
             }}
           >
-            <div style={{
-              backgroundColor: '#fff',
-              border: '1px solid #dee2e6',
-              borderRadius: '0',
-              boxShadow: 'none',
-              padding: '15px'
-            }}>
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  console.log('Formulario enviado');
-                  try {
-                    const formattedData = {};
+            <div className="row">
+              {columns
+                .filter((col) => !col.noForm)
+                .map((col) => (
+                  <div className="col-md-6" key={col.accessor}>
+                    <div className="form-group mb-3">
+                      <label className="form-label">
+                        {col.header}
+                        {col.required && <span className="text-danger">*</span>}
+                      </label>
 
-                    columns
-                      .filter((col) => !col.noForm)
-                      .forEach((col) => {
-                        const value = formData[col.accessor];
-                        if (col.type === "number") {
-                          formattedData[col.accessor] = value
-                            ? parseFloat(value)
-                            : null;
-                        } else if (col.type === "select" && col.optionValue) {
-                          formattedData[col.accessor] = value
-                            ? parseInt(value)
-                            : null;
-                        } else {
-                          formattedData[col.accessor] = value;
-                        }
-                      });
+                      {col.type === "select" ? (
+                        <select
+                          className="form-select"
+                          value={formData[col.accessor] || ""}
+                          onChange={(e) => {
+                            if (col.onChange) {
+                              col.onChange(e.target.value, formData, setFormData);
+                            } else {
+                              setFormData({
+                                ...formData,
+                                [col.accessor]: e.target.value,
+                              });
+                            }
+                          }}
+                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                          disabled={col.disabled ? col.disabled(formData) : false}
+                        >
+                          <option value="">Seleccionar...</option>
+                          {(() => {
+                            const options = typeof col.options === 'function' 
+                              ? col.options(formData) 
+                              : col.options || [];
+                            
+                            return options.map((option) => {
+                              const label = col.optionLabel
+                                ? typeof col.optionLabel === "function"
+                                  ? col.optionLabel(option)
+                                  : option[col.optionLabel]
+                                : option;
+                              const value = col.optionValue
+                                ? option[col.optionValue]
+                                : option;
 
-                    console.log('Datos formateados:', formattedData);
-
-                    let result;
-                    if (editingId) {
-                      console.log('Editando registro con ID:', editingId);
-                      result = await onEdit(editingId, formattedData);
-                      const itemPage =
-                        Math.floor(editingItemIndex / pageSize) + 1;
-                      setCurrentPage(itemPage);
-                    } else {
-                      console.log('Creando nuevo registro');
-                      result = await onCreate(formattedData);
-                      const lastPage = Math.ceil((data.length + 1) / pageSize);
-                      setCurrentPage(lastPage);
-                    }
-
-                    console.log('Operación completada exitosamente:', result);
-                    setShowModal(false);
-                    setFormData({});
-                    setEditingId(null);
-                    setEditingItemIndex(null);
-                  } catch (error) {
-                    console.error("Error:", error);
-                    // Mostrar mensaje más amigable con los detalles del error
-                    const errorMessage = error.message || "Ocurrió un error inesperado";
-                    const friendlyMessage = 
-                      errorMessage.includes("NetworkError") ? "Error de conexión: Verifica tu conexión a internet" :
-                      errorMessage.includes("Duplicate") ? "Ya existe un registro con esos datos" :
-                      errorMessage.includes("required") ? "Por favor complete todos los campos requeridos" :
-                      errorMessage;
-                    
-                    alert(`Error al procesar la operación: ${friendlyMessage}`);
-                  }
+                              return (
+                                <option
+                                  key={`${col.accessor}-${value}`}
+                                  value={value}
+                                >
+                                  {label || "N/A"}
+                                </option>
+                              );
+                            });
+                          })()}
+                        </select>
+                      ) : col.type === "textarea" ? (
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          value={formData[col.accessor] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [col.accessor]: e.target.value,
+                            })
+                          }
+                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                        />
+                      ) : (
+                        <input
+                          className="form-control"
+                          type={col.type || "text"}
+                          value={formData[col.accessor] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [col.accessor]: e.target.value,
+                            })
+                          }
+                          placeholder={`Ingrese ${col.header.toLowerCase()}`}
+                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                          minLength={col.minLength}
+                          maxLength={col.maxLength}
+                          step={col.type === "number" ? "0.01" : undefined}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+            
+            <div className="d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData({});
+                  setEditingId(null);
+                  setEditingItemIndex(null);
                 }}
               >
-                <div className="row">
-                  {columns
-                    .filter((col) => !col.noForm)
-                    .map((col) => (
-                      <div className="col-md-6 mb-3" key={col.accessor}>
-                        <div style={{
-                          marginBottom: '12px'
-                        }}>
-                          <label style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 500
-                          }}>
-                            {col.header}
-                            {col.required && (
-                              <span style={{color: 'red'}}>*</span>
-                            )}
-                          </label>
-
-                          {col.type === "select" ? (
-                          <select
-                              value={formData[col.accessor] || ""}
-                              onChange={(e) => {
-                                if (col.onChange) {
-                                  col.onChange(e.target.value, formData, setFormData);
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    [col.accessor]: e.target.value,
-                                  });
-                                }
-                              }}
-                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
-                              disabled={col.disabled ? col.disabled(formData) : false}
-                              style={{
-                                width: '100%', 
-                                padding: '8px 12px', 
-                                border: '1px solid #ced4da', 
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                lineHeight: '1.5'
-                              }}
-                          >
-                            <option value="">Seleccionar...</option>
-                              {(() => {
-                                const options = typeof col.options === 'function' 
-                                  ? col.options(formData) 
-                                  : col.options || [];
-                                
-                                return options.map((option) => {
-                                  const label = col.optionLabel
-                                    ? typeof col.optionLabel === "function"
-                                      ? col.optionLabel(option)
-                                      : option[col.optionLabel]
-                                    : option;
-                                  const value = col.optionValue
-                                    ? option[col.optionValue]
-                                    : option;
-
-                                  return (
-                                    <option
-                                      key={`${col.accessor}-${value}`}
-                                      value={value}
-                                    >
-                                      {label || "N/A"}
-                                    </option>
-                                  );
-                                });
-                              })()}
-                          </select>
-                          ) : col.type === "textarea" ? (
-                          <textarea
-                              rows="3"
-                              value={formData[col.accessor] || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  [col.accessor]: e.target.value,
-                                })
-                              }
-                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
-                              style={{
-                                width: '100%', 
-                                padding: '8px 12px', 
-                                border: '1px solid #ced4da', 
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                lineHeight: '1.5',
-                                minHeight: '80px'
-                              }}
-                            />
-                          ) : (
-                          <input
-                              type={col.type || "text"}
-                              value={formData[col.accessor] || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  [col.accessor]: e.target.value,
-                                })
-                              }
-                              placeholder={`Ingrese ${col.header.toLowerCase()}`}
-                              required={typeof col.required === 'function' ? col.required(formData) : col.required}
-                              minLength={col.minLength}
-                              maxLength={col.maxLength}
-                              step={col.type === "number" ? "0.01" : undefined}
-                              style={{
-                                width: '100%', 
-                                padding: '8px 12px', 
-                                border: '1px solid #ced4da', 
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                lineHeight: '1.5'
-                              }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-                
-                <div style={{
-                  marginTop: '20px',
-                  display: 'flex',
-                  justifyContent: 'flex-end'
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      setFormData({});
-                      setEditingId(null);
-                      setEditingItemIndex(null);
-                    }}
-                    style={{
-                      backgroundColor: '#6c757d',
-                      border: 'none',
-                      borderRadius: '4px',
-                      color: '#fff',
-                      padding: '8px 16px',
-                      marginRight: '10px',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <i className="fas fa-times me-2"></i>Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    style={{
-                      backgroundColor: '#007bff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      color: '#fff',
-                      padding: '8px 16px',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <i
-                      className={`fas ${
-                        editingId ? "fa-save" : "fa-check"
-                      } me-2`}
-                    ></i>
-                    {editingId ? "Guardar cambios" : "Crear"}
-                  </button>
-                </div>
-              </form>
+                <i className="fas fa-times me-2"></i>Cancelar
+              </button>
+              <button type="submit" className="btn btn-primary">
+                <i className={`fas ${editingId ? "fa-save" : "fa-check"} me-2`}></i>
+                {editingId ? "Guardar cambios" : "Crear"}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     );
@@ -571,13 +439,13 @@ const DataTable = ({
         <div className="card-body">
           <div className="d-flex justify-content-between mb-3 align-items-center">
             <div className="d-flex gap-2">
-              {allowCreate && (
+              {allowCreate && !showForm && (
                 <button
                   className="btn btn-success btn-sm"
                   onClick={() => {
                     setEditingId(null);
                     setFormData({});
-                    setShowModal(true);
+                    setShowForm(true);
                   }}
                 >
                   <i className="fas fa-plus me-2"></i>
@@ -605,6 +473,8 @@ const DataTable = ({
               )}
             </div>
           </div>
+
+          {showForm && renderForm()}
 
           <div className="table-responsive">
             <table className="table table-bordered table-hover table-striped">
@@ -681,7 +551,6 @@ const DataTable = ({
           )}
         </div>
       </div>
-      {showModal && renderModal()}
     </>
   );
 };
