@@ -7,9 +7,19 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
     emptyOutDir: true,
     copyPublicDir: true
   },
-  publicDir: 'public'
+  publicDir: 'public',
+  server: {
+    port: 3000,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://24.199.119.80',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 })
