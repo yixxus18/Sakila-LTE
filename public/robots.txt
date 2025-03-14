@@ -1,0 +1,9 @@
+# Permitir a todos los robots de búsqueda
+User-agent: *
+Allow: /
+
+# Tasa de rastreo para evitar sobrecargar el servidor
+Crawl-delay: 10
+
+# Sitemap (cuando lo tengas disponible)
+# Sitemap: https://tudominio.com/sitemap.xml 

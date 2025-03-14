@@ -495,7 +495,7 @@ const DataTable = ({
                   <tr>
                     <td colSpan={columns.length + 1} className="text-center">
                       <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Cargando...</span>
+                        <span className="visually-hidden"></span>
                       </div>
                     </td>
                   </tr>

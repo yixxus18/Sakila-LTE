@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import uttLogo from '../assets/utt.png';
+import userAvatar from '../assets/user2-160x160.jpg';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [openMenus, setOpenMenus] = useState({});
+  const [isHovered, setIsHovered] = useState(false);
+  const [wasOpenBeforeHover, setWasOpenBeforeHover] = useState(false);
 
   const toggleSubmenu = (menuName, event) => {
     event.preventDefault();
@@ -18,12 +22,27 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
 
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (isSidebarOpen || isHovered) {
       document.body.classList.add('sidebar-open');
     } else {
       document.body.classList.remove('sidebar-open');
     }
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, isHovered]);
+
+  const handleMouseEnter = () => {
+    setWasOpenBeforeHover(isSidebarOpen);
+    setIsHovered(true);
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (!wasOpenBeforeHover) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   return (
     <>
@@ -31,10 +50,14 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`}
         onClick={closeSidebar}
       />
-      <aside className={`main-sidebar sidebar-dark-primary elevation-4 ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+      <aside 
+        className={`main-sidebar sidebar-dark-primary elevation-4 ${isSidebarOpen ? 'sidebar-open' : ''}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <Link to="/" className="brand-link" onClick={closeSidebar}>
           <img
-            src="/dist/img/images.png"
+            src={uttLogo}
             alt="AdminLTE Logo"
             className="brand-image img-circle elevation-3"
             style={{ opacity: '.8' }}
@@ -46,7 +69,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           <div className="user-panel mt-3 pb-3 mb-3 d-flex">
             <div className="image">
               <img 
-                src="/dist/img/user2-160x160.jpg"
+                src={userAvatar}
                 className="img-circle elevation-2" 
                 alt="User Image" 
               />

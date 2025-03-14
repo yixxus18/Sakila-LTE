@@ -25,31 +25,13 @@ const Navbar = ({ setIsSidebarOpen }) => {
         <li className="nav-item d-none d-sm-inline-block">
           <Link to="/customers" className="nav-link">Clientes</Link>
         </li>
-      </ul>
-
-      {/* Search form */}
-      <form className="form-inline ml-3">
-        <div className="input-group input-group-sm">
-          <input 
-            className="form-control form-control-navbar" 
-            type="search" 
-            placeholder="Buscar Películas" 
-            aria-label="Buscar" 
-          />
-          <div className="input-group-append">
-            <button className="btn btn-navbar" type="submit">
-              <i className="fas fa-search"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-
+      </ul> 
       {/* Right navbar links */}
       <ul className="navbar-nav ml-auto">
         {/* User dropdown */}
         <li className="nav-item dropdown">
           <a className="nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-            <i className="fas fa-user-circle"></i>
+            <i className="fas fa-user-circle"></i> <span className="sr-only">Menú de usuario</span>
           </a>
           <div className="dropdown-menu dropdown-menu-right">
             <span className="dropdown-item dropdown-header">Administrador</span>
@@ -58,7 +40,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
               <i className="fas fa-users-cog mr-2"></i> Personal
             </Link>
             <div className="dropdown-divider"></div>
-            <a href="#" className="dropdown-item">
+            <a href="#" className="dropdown-item" aria-label="Cerrar sesión de usuario">
               <i className="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
             </a>
           </div>
