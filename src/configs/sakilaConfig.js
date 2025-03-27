@@ -1,4 +1,4 @@
-const baseURL = 'http://24.199.119.80/api';
+const baseURL = 'https://24.199.119.80/api';
 
 const sakilaConfig = {
   baseURL,
