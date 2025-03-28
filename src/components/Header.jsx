@@ -14,7 +14,7 @@ const Header = () => {
 
       <ul className="navbar-nav ml-auto">
         <li className="nav-item">
-          <Link to="/profile" className="nav-link">
+          <Link to="/login" className="nav-link">
             <i className="fas fa-user"></i>
           </Link>
         </li>

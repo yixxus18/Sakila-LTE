@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, ROLES } from './authProvider';
 import Layout from './components/Layout';
 import { RoleBasedRoute, PublicRoute, ReadOnlyRoute } from './components/ProtectedRoutes';
-
 import Home from './pages/Home';
 import FilmList from './pages/films/FilmList';
 import Categories from './pages/films/Categories';

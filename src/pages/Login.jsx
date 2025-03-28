@@ -1,7 +1,8 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../authProvider";
+import { AuthContext } from "../authProvider"; 
 import uttLogo from "../assets/utt.png";
+import sakilaConfig from "../configs/sakilaConfig";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -19,37 +20,29 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await login(formData);
-
+      await login(formData, setError); 
+      console.log("Login successful, navigating to 2FA for:", formData.email);
       navigate("/twofactor", {
         state: {
           email: formData.email,
-          token: response.token,
         },
       });
+
     } catch (err) {
-      let errorMessage;
-      if (err.message && typeof err.message === "string") {
-        try {
-          const parsedError = JSON.parse(err.message);
-          errorMessage = parsedError.error || "Error al iniciar sesión";
-        } catch {
-          errorMessage = err.message;
-        }
-      } else {
-        errorMessage = "Error al iniciar sesión";
+      console.error("Login component caught error:", err);
+      if (!error) {
+        setError("Error al iniciar sesión. Intente de nuevo.");
       }
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -79,8 +72,9 @@ const Login = () => {
                   type="button"
                   className="close"
                   onClick={() => setError("")}
+                  aria-label="Close" 
                 >
-                  ×
+                  <span aria-hidden="true">×</span>
                 </button>
                 <h5>
                   <i className="icon fas fa-ban"></i> Error
@@ -99,6 +93,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  aria-label="Correo electrónico"
                 />
                 <div className="input-group-append">
                   <div className="input-group-text">
@@ -116,6 +111,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  aria-label="Contraseña"
                 />
                 <div className="input-group-append">
                   <div className="input-group-text">
@@ -125,7 +121,7 @@ const Login = () => {
               </div>
 
               <div className="row">
-                <div className="col-4">
+                <div className="col-12"> 
                   <button
                     type="submit"
                     className="btn btn-primary btn-block"
@@ -138,18 +134,18 @@ const Login = () => {
                           role="status"
                           aria-hidden="true"
                         ></span>
-                        Entrando...
+                        Verificando... 
                       </>
                     ) : (
-                      "Entrar"
+                      "Continuar" 
                     )}
                   </button>
                 </div>
               </div>
             </form>
 
-            <p className="mb-1">
-              <Link to="/forgetpassword">Olvidé mi contraseña</Link>
+            <p className="mt-3 mb-1"> 
+              <Link to={sakilaConfig?.passwordrecuperation || "/forgetpassword"}>Olvidé mi contraseña</Link>
             </p>
           </div>
         </div>
