@@ -35,7 +35,6 @@ const TwoFactor = () => {
       }, {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
       });
       
       // Si la autenticación de dos factores es exitosa

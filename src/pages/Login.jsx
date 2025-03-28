@@ -6,8 +6,7 @@ import uttLogo from '../assets/utt.png';
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    remember: false
+    password: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -113,20 +112,6 @@ const Login = () => {
               </div>
               
               <div className="row">
-                <div className="col-8">
-                  <div className="icheck-primary">
-                    <input 
-                      type="checkbox" 
-                      id="remember" 
-                      name="remember"
-                      checked={formData.remember}
-                      onChange={handleChange}
-                    />
-                    <label htmlFor="remember">
-                      Recordarme
-                    </label>
-                  </div>
-                </div>
                 
                 <div className="col-4">
                   <button 
