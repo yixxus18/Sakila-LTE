@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import uttLogo from '../assets/utt.png';
 import userAvatar from '../assets/user2-160x160.jpg';
+import { AuthContext, ROLES } from '../authProvider';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [openMenus, setOpenMenus] = useState({});
   const [isHovered, setIsHovered] = useState(false);
   const [wasOpenBeforeHover, setWasOpenBeforeHover] = useState(false);
+  const { user, role, hasPermission, getRoleName } = useContext(AuthContext);
 
   const toggleSubmenu = (menuName, event) => {
     event.preventDefault();
@@ -44,6 +46,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     }
   };
 
+  // Verificar si se tiene permiso para ver un recurso
+  const canView = (resource) => {
+    return hasPermission('read', resource);
+  };
+
   return (
     <>
       <div 
@@ -75,7 +82,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               />
             </div>
             <div className="info">
-              <Link to="#" className="d-block">Administrador</Link>
+              <Link to="#" className="d-block">
+                {user ? (user.name || user.email || getRoleName()) : 'Invitado'}
+              </Link>
             </div>
           </div>
 
@@ -90,6 +99,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               </li>
 
               {/* Películas */}
+              {canView('films') && (
               <li className={`nav-item ${openMenus.movies ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={(e) => toggleSubmenu('movies', e)}>
                   <i className="nav-icon fas fa-film"></i>
@@ -102,56 +112,72 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       <p>Lista de Películas</p>
                     </Link>
                   </li>
+                  {canView('categories') && (
                   <li className="nav-item">
                     <Link to="/categories" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
                       <p>Categorías</p>
                     </Link>
                   </li>
+                  )}
+                 {canView('languages') && (
                  <li className="nav-item">
                    <Link to="/languages" className="nav-link" onClick={closeSidebar}>
                      <i className="far fa-circle nav-icon"></i>
                      <p>Idiomas</p>
                    </Link>
                  </li>
+                 )}
+                 {canView('actors') && (
                  <li className="nav-item">
                    <Link to="/actors" className="nav-link" onClick={closeSidebar}>
                      <i className="far fa-circle nav-icon"></i>
                      <p>Actores</p>
                    </Link>
                  </li>
+                 )}
                 </ul>
               </li>
+              )}
 
               {/* Clientes */}
+              {(role === ROLES.ADMIN || hasPermission('write', 'rentals')) && (
               <li className={`nav-item ${openMenus.customers ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={(e) => toggleSubmenu('customers', e)}>
                   <i className="nav-icon fas fa-users"></i>
                   <p>Clientes</p>
                 </a>
                 <ul className="nav nav-treeview">
+                  {role === ROLES.ADMIN && (
                   <li className="nav-item">
                     <Link to="/customers" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
                       <p>Lista de Clientes</p>
                     </Link>
                   </li>
+                  )}
+                  {(role === ROLES.ADMIN || hasPermission('write', 'rentals')) && (
                   <li className="nav-item">
                     <Link to="/rentals" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
                       <p>Alquileres</p>
                     </Link>
                   </li>
+                  )}
+                  {(role === ROLES.ADMIN || hasPermission('write', 'payments')) && (
                   <li className="nav-item">
                     <Link to="/payments" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
                       <p>Pagos</p>
                     </Link>
                   </li>
+                  )}
                 </ul>
               </li>
+              )}
 
               {/* Direcciones */}
+              {role === ROLES.ADMIN && (
               <li className={`nav-item ${openMenus.addresses ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={(e) => toggleSubmenu('addresses', e)}>
                   <i className="nav-icon fas fa-map-marker-alt"></i>
@@ -178,14 +204,18 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                   </li>
                 </ul>
               </li>
+              )}
 
               {/* Tiendas */}
+              {(role === ROLES.ADMIN || canView('inventory')) && (
               <li className={`nav-item ${openMenus.stores ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={(e) => toggleSubmenu('stores', e)}>
                   <i className="nav-icon fas fa-store"></i>
                   <p>Tiendas</p>
                 </a>
                 <ul className="nav nav-treeview">
+                  {role === ROLES.ADMIN && (
+                  <>
                   <li className="nav-item">
                     <Link to="/stores" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
@@ -198,16 +228,22 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       <p>Personal</p>
                     </Link>
                   </li>
+                  </>
+                  )}
+                  {canView('inventory') && (
                   <li className="nav-item">
                     <Link to="/inventory" className="nav-link" onClick={closeSidebar}>
                       <i className="far fa-circle nav-icon"></i>
                       <p>Inventario</p>
                     </Link>
                   </li>
+                  )}
                 </ul>
               </li>
+              )}
 
               {/* Reportes */}
+              {role === ROLES.ADMIN && (
               <li className={`nav-item ${openMenus.reports ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={(e) => toggleSubmenu('reports', e)}>
                   <i className="nav-icon fas fa-chart-bar"></i>
@@ -234,6 +270,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                   </li>
                 </ul>
               </li>
+              )}
             </ul>
           </nav>
         </div>

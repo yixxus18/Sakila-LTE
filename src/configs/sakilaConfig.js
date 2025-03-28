@@ -3,6 +3,15 @@ const baseURL = 'http://24.199.119.80/api';
 const sakilaConfig = {
   baseURL,
 
+  auth:{
+    login:`${baseURL}/login-step1`,
+    twofactorauth:`${baseURL}/login-step2`,
+    logut:`${baseURL}/logout`,
+    passwordrecuperation:`${baseURL}/passwd`,
+    me:`${baseURL}/me`,
+    storageTokenKeyName: 'token',
+  },
+
   staff: {
     getAll: `${baseURL}/staff`,
     create: `${baseURL}/staff`,
