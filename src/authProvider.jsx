@@ -143,7 +143,7 @@ const AuthProvider = ({ children }) => {
         throw new Error("No se recibió un token de acceso");
       }
     } catch (err) {
-      console.error("Error en login:", err);
+      console.error("Error en login:");
       if (errorCallback) {
         const errorMessage = err.message || "Error de autenticación";
         errorCallback(errorMessage.includes("401") ? "Credenciales inválidas" : errorMessage);
