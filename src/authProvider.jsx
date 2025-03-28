@@ -1,6 +1,6 @@
 // ** Agregar el uso de cookies para el token de autenticación
 import { createContext, useEffect, useState } from "react";
-import { parseCookies, destroyCookie } from "nookies"; 
+import { parseCookies, destroyCookie } from "nookies";
 import PropTypes from 'prop-types';
 // ** Config
 import { postData } from "./utils/fetchData";
@@ -62,10 +62,10 @@ const AuthProvider = ({ children }) => {
   // Función para verificar si un usuario tiene permiso para una acción en un recurso
   const hasPermission = (action, resource) => {
     if (!role || !PERMISSIONS[role]) return false;
-    
+
     const permissions = PERMISSIONS[role][action];
     if (!permissions) return false;
-    
+
     return permissions.includes('*') || permissions.includes(resource);
   };
 
@@ -73,7 +73,7 @@ const AuthProvider = ({ children }) => {
   const isReadOnly = () => {
     return role === ROLES.GUEST;
   };
-  
+
   // Función para obtener el nombre del rol
   const getRoleName = () => {
     return ROLE_NAMES[role] || '';
@@ -96,15 +96,15 @@ const AuthProvider = ({ children }) => {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json'
         });
-        
+
         const userData = response.user || response;
-        
+
         if (!userData || !userData.id) {
           console.log("No se encontró información de usuario válida");
           handleLogout();
         } else {
           setUser(userData);
-          
+
           // Asignar rol basado en la información del usuario
           // Por defecto, si el usuario tiene un token válido pero no especifica rol, asumimos que es cliente
           setRole(userData.role_id || ROLES.CUSTOMER);
@@ -123,7 +123,7 @@ const AuthProvider = ({ children }) => {
   const handleLogin = async (params, errorCallback) => {
     try {
       console.log("Intentando iniciar sesión con:", params);
-      
+
       const loginData = {
         email: params.email,
         password: params.password
@@ -133,10 +133,10 @@ const AuthProvider = ({ children }) => {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       });
-      
+
       console.log("Respuesta del servidor:", response);
-      
-      if (response?.token || response?.access_token) {
+
+      if (response?.message) {
         return response;
       } else {
         console.error("Respuesta sin token:", response);
@@ -179,7 +179,7 @@ const AuthProvider = ({ children }) => {
 };
 
 AuthProvider.propTypes = {
-  children: PropTypes.node.isRequired, 
+  children: PropTypes.node.isRequired,
 };
 
 export { AuthContext, AuthProvider, ROLES };

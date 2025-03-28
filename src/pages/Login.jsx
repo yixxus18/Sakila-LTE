@@ -1,14 +1,14 @@
-import { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../authProvider';
-import uttLogo from '../assets/utt.png';
+import { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../authProvider";
+import uttLogo from "../assets/utt.png";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
@@ -16,29 +16,28 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await login(formData);
-      if (response?.token) {
-        navigate('/twofactor', { 
-          state: { 
-            email: formData.email,
-            token: response.token 
-          } 
-        });
-      }
+
+      navigate("/twofactor", {
+        state: {
+          email: formData.email,
+          token: response.token,
+        },
+      });
     } catch (err) {
       let errorMessage;
-      if (err.message && typeof err.message === 'string') {
+      if (err.message && typeof err.message === "string") {
         try {
           const parsedError = JSON.parse(err.message);
-          errorMessage = parsedError.error || 'Error al iniciar sesión';
+          errorMessage = parsedError.error || "Error al iniciar sesión";
         } catch {
           errorMessage = err.message;
         }
       } else {
-        errorMessage = 'Error al iniciar sesión';
+        errorMessage = "Error al iniciar sesión";
       }
       setError(errorMessage);
     } finally {
@@ -48,30 +47,44 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   return (
-    <div className="login-page" style={{ minHeight: '100vh' }}>
+    <div className="login-page" style={{ minHeight: "100vh" }}>
       <div className="login-box">
         <div className="login-logo">
           <Link to="/">
-            <img src={uttLogo} alt="Sakila Logo" style={{ height: '60px', marginRight: '10px' }} />
+            <img
+              src={uttLogo}
+              alt="Sakila Logo"
+              style={{ height: "60px", marginRight: "10px" }}
+            />
             <b>Sakila</b> Admin
           </Link>
         </div>
-        
+
         <div className="card">
           <div className="card-body login-card-body">
-            <p className="login-box-msg">Inicie sesión para comenzar su sesión</p>
+            <p className="login-box-msg">
+              Inicie sesión para comenzar su sesión
+            </p>
 
             {error && (
               <div className="alert alert-danger alert-dismissible">
-                <button type="button" className="close" onClick={() => setError('')}>×</button>
-                <h5><i className="icon fas fa-ban"></i> Error</h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setError("")}
+                >
+                  ×
+                </button>
+                <h5>
+                  <i className="icon fas fa-ban"></i> Error
+                </h5>
                 {error}
               </div>
             )}
@@ -93,7 +106,7 @@ const Login = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="input-group mb-3">
                 <input
                   type="password"
@@ -110,21 +123,26 @@ const Login = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="row">
-                
                 <div className="col-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary btn-block"
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                        <span
+                          className="spinner-border spinner-border-sm mr-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
                         Entrando...
                       </>
-                    ) : 'Entrar'}
+                    ) : (
+                      "Entrar"
+                    )}
                   </button>
                 </div>
               </div>
@@ -141,4 +159,3 @@ const Login = () => {
 };
 
 export default Login;
-
