@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
+import { AuthContext } from "../authProvider";
 
 const DataTable = ({
   columns,
@@ -22,6 +23,22 @@ const DataTable = ({
   const [editingId, setEditingId] = useState(null);
   const [editingItemIndex, setEditingItemIndex] = useState(null);
   const pageSize = 10;
+  
+  // Obtener el contexto de autenticación
+  const { hasPermission } = useContext(AuthContext);
+  
+  // Determinar los permisos según el rol y el recurso
+  const canCreate = useMemo(() => {
+    return allowCreate && hasPermission('write', resource);
+  }, [allowCreate, hasPermission, resource]);
+  
+  const canEdit = useMemo(() => {
+    return allowEdit && hasPermission('write', resource);
+  }, [allowEdit, hasPermission, resource]);
+  
+  const canDelete = useMemo(() => {
+    return allowDelete && hasPermission('delete', resource);
+  }, [allowDelete, hasPermission, resource]);
 
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -213,7 +230,7 @@ const DataTable = ({
   // Renderizado de acciones
   const renderActions = (item, index) => (
     <div className="d-flex gap-2">
-      {allowEdit && (
+      {canEdit && (
         <button
           className="btn btn-warning btn-sm"
           onClick={() => {
@@ -237,7 +254,7 @@ const DataTable = ({
           <i className="fas fa-edit me-1"></i>Editar
         </button>
       )}
-      {allowDelete && (
+      {canDelete && (
         <button
           className="btn btn-danger btn-sm"
           onClick={() => onDelete(item[idKey])}
@@ -290,13 +307,12 @@ const DataTable = ({
                     }
                   });
 
-                let result;
                 if (editingId) {
-                  result = await onEdit(editingId, formattedData);
+                  await onEdit(editingId, formattedData);
                   const itemPage = Math.floor(editingItemIndex / pageSize) + 1;
                   setCurrentPage(itemPage);
                 } else {
-                  result = await onCreate(formattedData);
+                  await onCreate(formattedData);
                   const lastPage = Math.ceil((data.length + 1) / pageSize);
                   setCurrentPage(lastPage);
                 }
@@ -439,7 +455,7 @@ const DataTable = ({
         <div className="card-body">
           <div className="d-flex justify-content-between mb-3 align-items-center">
             <div className="d-flex gap-2">
-              {allowCreate && !showForm && (
+              {canCreate && !showForm && (
                 <button
                   className="btn btn-success btn-sm"
                   onClick={() => {
@@ -485,7 +501,7 @@ const DataTable = ({
                       {col.header}
                     </th>
                   ))}
-                  {(allowEdit || allowDelete) && (
+                  {(canEdit || canDelete) && (
                     <th className="align-middle">Acciones</th>
                   )}
                 </tr>
@@ -493,7 +509,7 @@ const DataTable = ({
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td colSpan={columns.length + 1} className="text-center">
+                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden"></span>
                       </div>
@@ -502,14 +518,14 @@ const DataTable = ({
                 )}
                 {error && (
                   <tr>
-                    <td colSpan={columns.length + 1} className="text-center">
+                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
                       <div className="alert alert-danger m-0">{error}</div>
                     </td>
                   </tr>
                 )}
                 {!isLoading && !error && paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length + 1} className="text-center">
+                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
                       {data.length === 0 ? (
                         <div className="alert alert-info m-0">
                           No hay datos disponibles
@@ -531,7 +547,7 @@ const DataTable = ({
                             : getNestedValue(item, col.accessor)}
                         </td>
                       ))}
-                      {(allowEdit || allowDelete) && (
+                      {(canEdit || canDelete) && (
                         <td>{renderActions(item, index)}</td>
                       )}
                     </tr>
