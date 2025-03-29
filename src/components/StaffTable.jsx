@@ -29,6 +29,11 @@ const StaffTable = () => {
         active: newData.active === '1'
       };
       
+      // Agregar rol_id solo si se proporciona
+      if (newData.rol_id) {
+        staffData.rol_id = parseInt(newData.rol_id);
+      }
+      
       // Validación en el lado del cliente antes de enviar
       if (!staffData.first_name || staffData.first_name.length > 45) {
         throw new Error('El nombre debe tener entre 1 y 45 caracteres');
@@ -71,6 +76,11 @@ const StaffTable = () => {
       // Incluir la contraseña solo si se proporciona
       if (updatedData.password) {
         staffData.password = updatedData.password;
+      }
+      
+      // Incluir rol_id solo si se proporciona
+      if (updatedData.rol_id) {
+        staffData.rol_id = parseInt(updatedData.rol_id);
       }
       
       // Validación en el lado del cliente
@@ -200,7 +210,29 @@ const StaffTable = () => {
       accessor: 'last_update',
       render: (item) => new Date(item.last_update).toLocaleDateString(),
       noForm: true
-    }
+    },
+    { 
+      header: 'Rol',
+      accessor: 'rol_id',
+      type: 'select',
+      required: false,
+      options: [
+        { value: '1', label: 'Administrador' },
+        { value: '2', label: 'Cliente' },
+        { value: '3', label: 'Invitado' }
+      ],
+      optionLabel: 'label',
+      optionValue: 'value',
+      render: (item) => {
+        const roles = {
+          1: 'Administrador',
+          2: 'Cliente',
+          3: 'Invitado'
+        };
+        return roles[item.rol_id] || 'No asignado';
+      }
+    },
+
   ];
 
   return (

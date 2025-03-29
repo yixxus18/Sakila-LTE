@@ -2,8 +2,6 @@ import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; 
 import { AuthContext } from '../authProvider'; 
 import uttLogo from '../assets/utt.png'; 
-import { postData } from '../utils/fetchData'; 
-import sakilaConfig from '../configs/sakilaConfig'; 
 
 const TwoFactor = () => {
   const [code, setCode] = useState('');
@@ -43,33 +41,6 @@ const TwoFactor = () => {
        if (!error) {
           setError('Error al verificar el código. Inténtelo de nuevo.');
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-     if (!email) {
-        setError("No se encontró el correo electrónico para reenviar el código.");
-        return;
-    }
-    setIsLoading(true);
-    setError('');
-    setResendStatus('Reenviando...');
-
-    try {
-      await postData(sakilaConfig.auth.resendCode || `${sakilaConfig.baseURL}/resend-code`,
-       { email: email }, 
-       {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      });
-
-      setResendStatus('El código ha sido reenviado a su correo electrónico.');
-    } catch (err) {
-      console.error('Error al reenviar código:', err);
-      setError('Error al reenviar el código. Por favor, inténtelo de nuevo más tarde.');
-      setResendStatus('');
     } finally {
       setIsLoading(false);
     }
@@ -165,18 +136,6 @@ const TwoFactor = () => {
                 </div>
               </div>
             </form>
-
-            <p className="mb-1 text-center">
-              <button
-                 type="button"
-                 onClick={handleResendCode}
-                 className="btn btn-link" 
-                 disabled={isLoading} 
-               >
-                ¿No recibió el código? Reenviar
-              </button>
-            </p>
-
             <p className="mb-0 text-center">
               <Link to="/login" className="text-center">
                 Regresar al inicio de sesión

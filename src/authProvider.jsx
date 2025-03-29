@@ -43,7 +43,8 @@ const PERMISSIONS = {
   },
 };
 
-const storageUserKeyName = authConfig.storageUserKeyName || "userData";
+const storageUserKeyName = "userData";
+const storageTokenKeyName = sakilaConfig.auth.storageTokenKeyName || "token";
 
 const defaultProvider = {
   user: null,
@@ -71,7 +72,7 @@ const AuthProvider = ({ children }) => {
     if (userData) {
       try {
         setCookie(null, storageUserKeyName, JSON.stringify(userData), {
-          maxAge: authConfig.tokenExpiration || 60 * 60 * 24,
+          maxAge: authConfig.tokenExpiration || 60 * 60 * 24 * 7, // Una semana por defecto
           path: "/",
         });
       } catch (error) {
@@ -79,6 +80,21 @@ const AuthProvider = ({ children }) => {
       }
     } else {
       destroyCookie(null, storageUserKeyName, { path: "/" });
+    }
+  }, []);
+
+  const setToken = useCallback((token) => {
+    if (token) {
+      try {
+        setCookie(null, storageTokenKeyName, JSON.stringify(token), {
+          maxAge: authConfig.tokenExpiration || 60 * 60 * 24 * 7, // Una semana por defecto
+          path: "/",
+        });
+      } catch (error) {
+        console.error("Error storing token in cookie:", error);
+      }
+    } else {
+      destroyCookie(null, storageTokenKeyName, { path: "/" });
     }
   }, []);
 
@@ -105,18 +121,27 @@ const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       setLoading(true);
       const cookies = parseCookies();
-      const storedToken = cookies[authConfig.storageTokenKeyName];
+      const storedToken = cookies[storageTokenKeyName];
       const storedUserData = cookies[storageUserKeyName];
 
       if (storedToken && storedUserData) {
         try {
+          JSON.parse(storedToken);
           const userData = JSON.parse(storedUserData);
-          if (userData && userData.id && userData.role_id) {
-            setUserState(userData);
-            setRoleState(userData.role_id || ROLES.CUSTOMER);
+          
+          if (userData && (userData.staff_id || userData.id) && (userData.rol_id || userData.role_id)) {
+            // Normalizar la estructura del usuario para usar campos consistentes
+            const normalizedUser = {
+              ...userData,
+              id: userData.staff_id || userData.id,
+              role_id: userData.rol_id || userData.role_id
+            };
+            
+            setUserState(normalizedUser);
+            setRoleState(normalizedUser.role_id || ROLES.CUSTOMER);
             console.log("AuthProvider: Session restored from cookies.");
           } else {
             console.warn(
@@ -126,7 +151,7 @@ const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error(
-            "AuthProvider: Error parsing user data from cookies. Clearing session.",
+            "AuthProvider: Error parsing data from cookies. Clearing session.",
             error
           );
           handleLogout();
@@ -134,17 +159,18 @@ const AuthProvider = ({ children }) => {
       } else {
         setUserState(null);
         setRoleState(ROLES.GUEST);
-        if (!storedToken)
-          destroyCookie(null, authConfig.storageTokenKeyName, { path: "/" });
-        if (!storedUserData)
+        if (!storedToken) {
+          destroyCookie(null, storageTokenKeyName, { path: "/" });
+        }
+        if (!storedUserData) {
           destroyCookie(null, storageUserKeyName, { path: "/" });
+        }
         console.log("AuthProvider: No active session found.");
       }
       setLoading(false);
     };
 
     initAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogin = async (params, errorCallback) => {
@@ -205,22 +231,29 @@ const AuthProvider = ({ children }) => {
 
       console.log("AuthProvider: Verification endpoint response:", response);
 
-      const token = response?.token || response?.access_token;
+      const token = response?.access_token;
       const userData = response?.staff;
-      console.log("Staff: "+userData.staff_id)
 
-      if (token && userData && userData.staff_id && userData.rol_id) {
-        setCookie(null, authConfig.storageTokenKeyName, token, {
-          maxAge: authConfig.tokenExpiration || 60 * 60 * 24,
-          path: "/",
-        });
-        setUser(userData);
-        setRole(userData.rol_id);
+      if (token && userData && (userData.staff_id || userData.id)) {
+        // Guardar el token
+        setToken(token);
+        
+        // Normalizar la estructura del usuario
+        const normalizedUser = {
+          ...userData,
+          id: userData.staff_id || userData.id,
+          role_id: userData.rol_id || userData.role_id || ROLES.CUSTOMER
+        };
+        
+        // Guardar datos del usuario
+        setUser(normalizedUser);
+        setRole(normalizedUser.role_id);
+        
         console.log(
           "AuthProvider: Verification successful. User:",
-          userData.staff_id,
+          normalizedUser.id,
           "Role:",
-          userData.rol_id
+          normalizedUser.role_id
         );
         setLoading(false);
         return response;
@@ -250,9 +283,9 @@ const AuthProvider = ({ children }) => {
   };
 
   const handleLogout = () => {
-    setUser(null);
-    setRole(ROLES.GUEST);
-    destroyCookie(null, authConfig.storageTokenKeyName, { path: "/" });
+    setUserState(null);
+    setRoleState(ROLES.GUEST);
+    destroyCookie(null, storageTokenKeyName, { path: "/" });
     destroyCookie(null, storageUserKeyName, { path: "/" });
     window.location.href = sakilaConfig.loginEndpoint || "/login";
   };

@@ -1,4 +1,4 @@
-const baseURL = 'http://localhost:8000/api';
+const baseURL = 'http://192.168.253.58:8000/api';
 
 const sakilaConfig = {
   baseURL,
@@ -7,7 +7,8 @@ const sakilaConfig = {
     login:`${baseURL}/login-step1`,
     twofactorauth:`${baseURL}/login-step2`,
     logut:`${baseURL}/logout`,
-    passwordrecuperation:`${baseURL}/passwd`,
+    passwordrecuperation:`${baseURL}/restore/password`,
+    changepassword:`${baseURL}/change/password`,
     me:`${baseURL}/me`,
     storageTokenKeyName: 'token',
   },
