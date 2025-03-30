@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import uttLogo from '../assets/utt.png';
 import { postData } from '../utils/fetchData';
 import sakilaConfig from '../configs/sakilaConfig';
@@ -9,7 +9,7 @@ const ForgetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
-
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -22,6 +22,7 @@ const ForgetPassword = () => {
       });
       
       setIsSubmitted(true);
+      navigate('/recovery-code-verification');
     } catch (err) {
       console.error('Error al solicitar recuperación de contraseña:', err);
       setError('Error al procesar la solicitud. Por favor, inténtelo de nuevo más tarde.');

@@ -23,6 +23,8 @@ import Login from './pages/Login';
 import TwoFactor from './pages/twofactor';
 import ForgetPassword from './pages/forgetpassword';
 import AccessDenied from './pages/AccessDenied';
+import RecoveryCodeVerification from './pages/RecoveryCodeVerification';
+
 import './styles/global.css';
 
 function App() {
@@ -82,6 +84,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/twofactor" element={<TwoFactor />} />
               <Route path="/forgetpassword" element={<ForgetPassword />} />
+              <Route path="/recovery-code-verification" element={<RecoveryCodeVerification />} />
             </Route>
           </Routes>
         </Layout>

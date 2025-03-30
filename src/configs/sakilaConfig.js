@@ -1,4 +1,4 @@
-const baseURL = 'http://192.168.253.58:8000/api';
+const baseURL = 'http://localhost:8000/api';
 
 const sakilaConfig = {
   baseURL,
