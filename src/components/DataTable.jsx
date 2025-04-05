@@ -23,29 +23,29 @@ const DataTable = ({
   const [editingId, setEditingId] = useState(null);
   const [editingItemIndex, setEditingItemIndex] = useState(null);
   const pageSize = 10;
-  
+
   // Obtener el contexto de autenticación
   const { hasPermission } = useContext(AuthContext);
-  
+
   // Determinar los permisos según el rol y el recurso
   const canCreate = useMemo(() => {
-    return allowCreate && hasPermission('write', resource);
+    return allowCreate && hasPermission("write", resource);
   }, [allowCreate, hasPermission, resource]);
-  
+
   const canEdit = useMemo(() => {
-    return allowEdit && hasPermission('write', resource);
+    return allowEdit && hasPermission("write", resource);
   }, [allowEdit, hasPermission, resource]);
-  
+
   const canDelete = useMemo(() => {
-    return allowDelete && hasPermission('delete', resource);
+    return allowDelete && hasPermission("delete", resource);
   }, [allowDelete, hasPermission, resource]);
 
   // Efecto para controlar el scroll del body cuando el modal está abierto
   useEffect(() => {
     if (showForm) {
-      document.body.classList.add('modal-open');
+      document.body.classList.add("modal-open");
     } else {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     }
   }, [showForm]);
 
@@ -55,18 +55,21 @@ const DataTable = ({
     const value = path
       .split(".")
       .reduce((acc, part) => (acc && acc[part] ? acc[part] : ""), obj);
-    
+
     // Si es una fecha, la formateamos
-    if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)))) {
+    if (
+      value instanceof Date ||
+      (typeof value === "string" && !isNaN(Date.parse(value)))
+    ) {
       return new Date(value).toLocaleDateString();
     }
     // Si es un número, lo convertimos a string
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       return value.toString();
     }
     // Si es un booleano o estado, lo procesamos
-    if (typeof value === 'boolean') {
-      return value ? 'Activo' : 'Inactivo';
+    if (typeof value === "boolean") {
+      return value ? "Activo" : "Inactivo";
     }
     return value || "";
   };
@@ -76,7 +79,9 @@ const DataTable = ({
     if (col.render) {
       // Si tiene función render, la usamos para obtener el valor formateado
       const renderedValue = col.render(item);
-      return typeof renderedValue === 'string' ? renderedValue : String(renderedValue || '');
+      return typeof renderedValue === "string"
+        ? renderedValue
+        : String(renderedValue || "");
     }
     return getNestedValue(item, col.accessor);
   };
@@ -97,12 +102,12 @@ const DataTable = ({
     const lowerQuery = searchQuery.toLowerCase();
     return data.filter((item) =>
       searchableColumns.some((accessor) => {
-        const column = columns.find(col => col.accessor === accessor);
+        const column = columns.find((col) => col.accessor === accessor);
         if (!column) return false;
-        
+
         const searchValue = getSearchValue(item, column);
         const stringValue = String(searchValue || "").toLowerCase();
-        
+
         // Búsqueda por coincidencia parcial
         return stringValue.includes(lowerQuery);
       })
@@ -160,7 +165,9 @@ const DataTable = ({
       pageButtons.push(
         <button
           key={i}
-          className={`btn btn-${currentPage === i ? 'primary' : 'outline-primary'} btn-sm`}
+          className={`btn btn-${
+            currentPage === i ? "primary" : "outline-primary"
+          } btn-sm`}
           onClick={() => handlePageChange(i)}
         >
           {i}
@@ -193,7 +200,7 @@ const DataTable = ({
         >
           <i className="fas fa-chevron-left"></i>
         </button>
-        
+
         {totalPages > 10 && (
           <button
             className="btn btn-outline-primary btn-sm"
@@ -203,19 +210,21 @@ const DataTable = ({
             -10
           </button>
         )}
-        
+
         {pageButtons}
-        
+
         {totalPages > 10 && (
           <button
             className="btn btn-outline-primary btn-sm"
             disabled={currentPage > totalPages - 10}
-            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 10))}
+            onClick={() =>
+              handlePageChange(Math.min(totalPages, currentPage + 10))
+            }
           >
             +10
           </button>
         )}
-        
+
         <button
           className="btn btn-outline-primary btn-sm"
           disabled={currentPage === totalPages}
@@ -268,15 +277,17 @@ const DataTable = ({
   // Renderizado del formulario
   const renderForm = () => {
     if (!showForm) return null;
-    
+
     return (
       <div className="card mb-3">
         <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
           <h5 className="m-0">
-            <i className={`fas ${editingId ? "fa-edit" : "fa-plus-circle"} me-2`}></i>
+            <i
+              className={`fas ${editingId ? "fa-edit" : "fa-plus-circle"} me-2`}
+            ></i>
             {editingId ? "Editar" : "Crear"} {resource}
           </h5>
-          <button 
+          <button
             type="button"
             className="btn-close btn-close-white"
             onClick={() => {
@@ -299,9 +310,13 @@ const DataTable = ({
                   .forEach((col) => {
                     const value = formData[col.accessor];
                     if (col.type === "number") {
-                      formattedData[col.accessor] = value ? parseFloat(value) : null;
+                      formattedData[col.accessor] = value
+                        ? parseFloat(value)
+                        : null;
                     } else if (col.type === "select" && col.optionValue) {
-                      formattedData[col.accessor] = value ? parseInt(value) : null;
+                      formattedData[col.accessor] = value
+                        ? parseInt(value)
+                        : null;
                     } else {
                       formattedData[col.accessor] = value;
                     }
@@ -323,13 +338,16 @@ const DataTable = ({
                 setEditingItemIndex(null);
               } catch (error) {
                 console.error("Error:", error);
-                const errorMessage = error.message || "Ocurrió un error inesperado";
-                const friendlyMessage = 
-                  errorMessage.includes("NetworkError") ? "Error de conexión: Verifica tu conexión a internet" :
-                  errorMessage.includes("Duplicate") ? "Ya existe un registro con esos datos" :
-                  errorMessage.includes("required") ? "Por favor complete todos los campos requeridos" :
-                  errorMessage;
-                
+                const errorMessage =
+                  error.message || "Ocurrió un error inesperado";
+                const friendlyMessage = errorMessage.includes("NetworkError")
+                  ? "Error de conexión: Verifica tu conexión a internet"
+                  : errorMessage.includes("Duplicate")
+                  ? "Ya existe un registro con esos datos"
+                  : errorMessage.includes("required")
+                  ? "Por favor complete todos los campos requeridos"
+                  : errorMessage;
+
                 alert(`Error al procesar la operación: ${friendlyMessage}`);
               }
             }}
@@ -351,7 +369,11 @@ const DataTable = ({
                           value={formData[col.accessor] || ""}
                           onChange={(e) => {
                             if (col.onChange) {
-                              col.onChange(e.target.value, formData, setFormData);
+                              col.onChange(
+                                e.target.value,
+                                formData,
+                                setFormData
+                              );
                             } else {
                               setFormData({
                                 ...formData,
@@ -359,15 +381,22 @@ const DataTable = ({
                               });
                             }
                           }}
-                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
-                          disabled={col.disabled ? col.disabled(formData) : false}
+                          required={
+                            typeof col.required === "function"
+                              ? col.required(formData)
+                              : col.required
+                          }
+                          disabled={
+                            col.disabled ? col.disabled(formData) : false
+                          }
                         >
                           <option value="">Seleccionar...</option>
                           {(() => {
-                            const options = typeof col.options === 'function' 
-                              ? col.options(formData) 
-                              : col.options || [];
-                            
+                            const options =
+                              typeof col.options === "function"
+                                ? col.options(formData)
+                                : col.options || [];
+
                             return options.map((option) => {
                               const label = col.optionLabel
                                 ? typeof col.optionLabel === "function"
@@ -400,7 +429,11 @@ const DataTable = ({
                               [col.accessor]: e.target.value,
                             })
                           }
-                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                          required={
+                            typeof col.required === "function"
+                              ? col.required(formData)
+                              : col.required
+                          }
                         />
                       ) : (
                         <input
@@ -414,7 +447,11 @@ const DataTable = ({
                             })
                           }
                           placeholder={`Ingrese ${col.header.toLowerCase()}`}
-                          required={typeof col.required === 'function' ? col.required(formData) : col.required}
+                          required={
+                            typeof col.required === "function"
+                              ? col.required(formData)
+                              : col.required
+                          }
                           minLength={col.minLength}
                           maxLength={col.maxLength}
                           step={col.type === "number" ? "0.01" : undefined}
@@ -424,7 +461,7 @@ const DataTable = ({
                   </div>
                 ))}
             </div>
-            
+
             <div className="d-flex justify-content-end gap-2">
               <button
                 type="button"
@@ -439,7 +476,9 @@ const DataTable = ({
                 <i className="fas fa-times me-2"></i>Cancelar
               </button>
               <button type="submit" className="btn btn-primary">
-                <i className={`fas ${editingId ? "fa-save" : "fa-check"} me-2`}></i>
+                <i
+                  className={`fas ${editingId ? "fa-save" : "fa-check"} me-2`}
+                ></i>
                 {editingId ? "Guardar cambios" : "Crear"}
               </button>
             </div>
@@ -497,7 +536,12 @@ const DataTable = ({
               <thead className="thead-dark">
                 <tr>
                   {columns.map((col) => (
-                    <th key={col.accessor} className="align-middle">
+                    <th
+                      key={col.accessor}
+                      className={`align-middle ${
+                        col.accessor === "Password" ? "hidden" : ""
+                      }`}
+                    >
                       {col.header}
                     </th>
                   ))}
@@ -509,8 +553,14 @@ const DataTable = ({
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
-                      <div className="spinner-border text-primary" role="status">
+                    <td
+                      colSpan={columns.length + (canEdit || canDelete ? 1 : 0)}
+                      className="text-center"
+                    >
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      >
                         <span className="visually-hidden"></span>
                       </div>
                     </td>
@@ -518,14 +568,20 @@ const DataTable = ({
                 )}
                 {error && (
                   <tr>
-                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
+                    <td
+                      colSpan={columns.length + (canEdit || canDelete ? 1 : 0)}
+                      className="text-center"
+                    >
                       <div className="alert alert-danger m-0">{error}</div>
                     </td>
                   </tr>
                 )}
                 {!isLoading && !error && paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length + (canEdit || canDelete ? 1 : 0)} className="text-center">
+                    <td
+                      colSpan={columns.length + (canEdit || canDelete ? 1 : 0)}
+                      className="text-center"
+                    >
                       {data.length === 0 ? (
                         <div className="alert alert-info m-0">
                           No hay datos disponibles
@@ -540,13 +596,15 @@ const DataTable = ({
                 ) : (
                   paginatedData.map((item, index) => (
                     <tr key={index}>
-                      {columns.map((col) => (
-                        <td key={col.accessor}>
-                          {col.render
-                            ? col.render(item)
-                            : getNestedValue(item, col.accessor)}
-                        </td>
-                      ))}
+                      {columns
+                        .filter((col) => col.accessor !== "Password")
+                        .map((col) => (
+                          <td key={col.accessor}>
+                            {col.render
+                              ? col.render(item)
+                              : getNestedValue(item, col.accessor)}
+                          </td>
+                        ))}
                       {(canEdit || canDelete) && (
                         <td>{renderActions(item, index)}</td>
                       )}
@@ -560,7 +618,8 @@ const DataTable = ({
           {filteredData.length > 0 && (
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
-                Mostrando {paginatedData.length} de {filteredData.length} registros
+                Mostrando {paginatedData.length} de {filteredData.length}{" "}
+                registros
               </div>
               {renderPagination()}
             </div>
@@ -587,7 +646,7 @@ DataTable.propTypes = {
       optionLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
       optionValue: PropTypes.string,
       onChange: PropTypes.func,
-      disabled: PropTypes.func
+      disabled: PropTypes.func,
     })
   ).isRequired,
   data: PropTypes.array,

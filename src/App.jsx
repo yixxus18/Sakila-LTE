@@ -35,10 +35,10 @@ function App() {
           <Routes>
             {/* Ruta inicial accesible para todos */}
             <Route path="/" element={<Home />} />
-            
+
             {/* Página de acceso denegado */}
             <Route path="/acceso-denegado" element={<AccessDenied />} />
-            
+
             {/* Rutas relacionadas con películas - accesibles para administradores, clientes e invitados (solo lectura) */}
             <Route element={<ReadOnlyRoute />}>
               <Route path="/films" element={<FilmList />} />
@@ -54,18 +54,18 @@ function App() {
               <Route path="/cities" element={<Cities />} />
               <Route path="/countries" element={<Countries />} />
             </Route>
-            
+
             {/* Rutas de clientes - accesibles para administradores */}
             <Route element={<RoleBasedRoute roles={[ROLES.ADMIN]} />}>
               <Route path="/customers" element={<CustomerList />} />
             </Route>
-            
+
             {/* Rutas de alquileres/pagos - accesibles para administradores y clientes */}
             <Route element={<RoleBasedRoute roles={[ROLES.ADMIN, ROLES.CUSTOMER]} />}>
               <Route path="/rentals" element={<Rentals />} />
               <Route path="/payments" element={<Payments />} />
             </Route>
-            
+
             {/* Rutas de tiendas y personal - solo accesibles para administradores */}
             <Route element={<RoleBasedRoute roles={[ROLES.ADMIN]} />}>
               <Route path="/stores" element={<StoreList />} />
